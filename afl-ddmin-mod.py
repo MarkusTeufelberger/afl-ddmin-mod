@@ -148,13 +148,17 @@ def run_showmap(
     if requires_stdin:
         try:
             with open(input_name, "rb") as f:
-                return subprocess.run(commandline, input=f.read(), stdout=subprocess.DEVNULL,
-                                                                   stderr=subprocess.DEVNULL).returncode
+                return subprocess.run(commandline,
+                                      input=f.read(),
+                                      stdout=subprocess.DEVNULL,
+                                      stderr=subprocess.DEVNULL).returncode
         except IOError as ioe:
             print(ioe, file=sys.stderr)
             exit(1)
     else:
-        return subprocess.run(commandline, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
+        return subprocess.run(commandline,
+                              stdout=subprocess.DEVNULL,
+                              stderr=subprocess.DEVNULL).returncode
 
 
 def get_map_hash(
