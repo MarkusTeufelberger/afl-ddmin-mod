@@ -129,21 +129,32 @@ def run_showmap(
         commandline.append("-Q")
     if args.edge_only is True:
         commandline.append("-e")
+
+    requires_stdin = True
     for subarg in args.command:
         if "@@" in subarg:
             commandline.append(subarg.replace("@@", input_name))
+            requires_stdin = False
         else:
             commandline.append(subarg)
     # afl-showmap is very limited in regards to return codes:
     # 0: target ran fine
-    # 1: target crashed
-    # 2: target timed out
-    # 3: target crashed AND timed out (?!)
+    # Should ask lcamtuf to change calculation for afl-showmap exit code to child_crashed * 3 + child_timed_out * 2
+    # to allow to differentiate between hangs and incorrect args passed to afl-showmap
+    # 1: target timed out or afl-showmap failed to run
+    # 2: target crashed
 
     # This is by FAR the limiting factor execution time wise btw.!
-    return subprocess.run(commandline,
-                          stdout=subprocess.DEVNULL,
-                          stderr=subprocess.DEVNULL).returncode
+    if requires_stdin:
+        try:
+            with open(input_name, "rb") as f:
+                return subprocess.run(commandline, input=f.read(), stdout=subprocess.DEVNULL,
+                                                                   stderr=subprocess.DEVNULL).returncode
+        except IOError as ioe:
+            print(ioe, file=sys.stderr)
+            exit(1)
+    else:
+        return subprocess.run(commandline, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
 
 
 def get_map_hash(
