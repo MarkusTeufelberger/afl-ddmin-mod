@@ -539,6 +539,9 @@ def main() -> int:
     # Run target once to check if everything works out
     with tempfile.NamedTemporaryFile() as tmpoutput:
         ret_code = run_showmap(args.input_file, tmpoutput.name, args)
+        if os.path.getsize(tmpoutput.name) == 0:
+            print("No map created by afl-showmap, aborting.")
+            return -3
     if ret_code == 0:
         print("Target exits normally")
     elif ret_code == 1:
