@@ -452,8 +452,10 @@ def ddmin2_mod(chunk_list: List[Tuple[Tuple[int, int]]],
         best_size = testfilesize
         best_result = None
         for result_ in RESULTS:
-            if chunksize(result_) < best_size:
+            new_size = chunksize(result_)
+            if new_size < best_size:
                 best_result = result_
+                best_size = new_size
         # clear results
         RESULTS = []
         # new smallest test case
