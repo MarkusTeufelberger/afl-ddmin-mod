@@ -443,6 +443,10 @@ def ddmin2_mod(chunk_list: List[Tuple[Tuple[int, int]]],
     crunch_tests(args, chunk_list)
 
     global RESULTS
+
+    # ensure all results are smaller than the starting size
+    RESULTS = [c for c in RESULTS if chunksize(c) < testfilesize]
+
     if RESULTS:
         # get the best result
         best_size = testfilesize
