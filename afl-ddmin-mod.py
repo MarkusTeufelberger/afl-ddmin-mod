@@ -263,7 +263,10 @@ def split_chunks(chunks: Tuple[Tuple[int, int]], jitter:
     """
     Given a tuple of chunks, creates all possible splits up to a certain offset.
 
-    In case the offset ("jitter") is larger than the chunk, the chunk is not split.
+    Chunks of length 1 are preserved, other splits that do not result in 2 chunks
+    are discarded.
+    
+    TODO: Good place for doctests here.
 
     :param chunks: A tuple with (start, end,) offsets
     :param jitter: The maximum offset (+ and -) to consider
@@ -285,6 +288,10 @@ def split_chunks(chunks: Tuple[Tuple[int, int]], jitter:
         newchunks_plus = []
         newchunks_minus = []
         for start, end in chunks:
+            # preserve single byte chunks
+            if (end - start) == 1:
+                newchunks_plus.append((start, end))
+                continue
             # ddmin originally only has 0 jitter and does strict binary search
             # ddmin-mod adds jitter to the mix
             delta_plus = (end - start) // 2 + variant
@@ -292,22 +299,19 @@ def split_chunks(chunks: Tuple[Tuple[int, int]], jitter:
             mid_plus = start + delta_plus
             mid_minus = start + delta_minus
             # depending on jitter, start can be equal to or smaller than mid!
-            if start < mid_plus <= end:
+            if start < mid_plus < end:
                 newchunks_plus.append((start, mid_plus))
-            if start < mid_minus <= end:
+            if start < mid_minus < end:
                 newchunks_minus.append((start, mid_minus))
-            # depending on jitter, mid can be equal to or smaller than end!
-            if start <= mid_plus < end:
+            # depending on jitter, mid can be equal to or larger than end!
+            if start < mid_plus < end:
                 newchunks_plus.append((mid_plus, end))
-            if start <= mid_minus < end:
+            if start < mid_minus < end:
                 newchunks_minus.append((mid_minus, end))
-            # still empty? Just return the initial chunks, because the current offset is too large
-            if mid_plus > end:
-                newchunks_plus.append((start, end))
-            if start > mid_minus:
-                newchunks_minus.append((start, end))
-        chunk_list.append(tuple(newchunks_plus))
-        chunk_list.append(tuple(newchunks_minus))
+        if newchunks_plus:
+            chunk_list.append(tuple(newchunks_plus))
+        if newchunks_minus:
+            chunk_list.append(tuple(newchunks_minus))
     # deduplicate while preserving order
     # See: http://stackoverflow.com/q/480214
     # this ensures the canonical solution with jitter = 0 is always the first list element
